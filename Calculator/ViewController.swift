@@ -13,33 +13,61 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!
     
-    var userIsInTheMiddleOfTyping = false
+    @IBOutlet weak var status: UILabel!
     
-    @IBAction func touchDigit(_ sender: UIButton) {
-        let digit = sender.currentTitle!
-        if userIsInTheMiddleOfTyping {
-            let textCurrentlyInDisplay = display.text!
-            display.text = textCurrentlyInDisplay + digit
-        } else {
-            display.text = digit
-            userIsInTheMiddleOfTyping = true
-        }
-        //print("\(digit) was touched")
-    }
+    private var userIsInTheMiddleOfTyping = false
     
-    // computer property
-    
-    var displayValue: Double{
+    private var brain = CalculatorBrain()
+
+    private var displayValue: Double{
         get {
-            return Double(display.text!)!
+            //this remove white space that was appended when the input label is empty
+            return Double(display.text!.trimmingCharacters(in: .whitespaces))!
         }
         set {
             display.text = String(newValue)
             
         }
     }
+
     
-    private var brain = CalculatorBrain()
+    @IBAction func clearCalculator(_ sender: UIButton) {
+        brain = CalculatorBrain ()
+        userIsInTheMiddleOfTyping = false
+        display.text = " "
+    }
+    
+    @IBAction func backSpace(_ sender: UIButton) {
+        //if display.text?.characters.count != 0,
+        if let lastIndex = display.text?.index(before: (display.text?.endIndex)!) {
+            NSLog("last is \(lastIndex)")
+            display.text?.remove(at: lastIndex)
+            if display.text?.characters.count == 0 {
+                display.text = " "
+            }
+        }
+        //}
+    }
+    
+    @IBAction func touchDigit(_ sender: UIButton) {
+        let digit = sender.currentTitle!
+
+        if (display.text?.characters.contains("."))! && digit == "." {
+            //do nothing---> this can be flipped usign demorgan's law
+            // there is a little bug, 
+            // on the second operand can't start out with a dot.
+            // it has to start with a 0. to clear the screen.
+        } else {
+            if userIsInTheMiddleOfTyping {
+                let textCurrentlyInDisplay = display.text!
+                display.text = textCurrentlyInDisplay + digit
+            } else {
+                display.text = digit
+                userIsInTheMiddleOfTyping = true
+            }
+        }
+        
+    }
     
     @IBAction func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
