@@ -43,6 +43,7 @@ struct CalculatorBrain {
         "=": Operation.equals
         
     ]
+    
     var description: String?
    // failed f. g. and i.
     mutating func performOperation(_ symbol: String) {
@@ -52,19 +53,13 @@ struct CalculatorBrain {
                 accumulator = value
                 description = description == nil ? symbol : description! + symbol
             case .unaryOperation(let function):
-                //crashed because of the description! when initially started is nil
-                //description is not tracked with accumulator because lacked of setOperator()
                 if accumulator != nil {
                     if symbol == "x²" {
                         description =  "(" + description! + ")²"
                     } else {
                         description =  symbol + "(" + description! + ")"
                     }
-//                    if symbol == "x²" {
-//                        description =  description! + "(\(accumulator!))²"
-//                    } else {
-//                        description =  description! + symbol + "(\(accumulator!))"
-//                    }
+                    
                     accumulator = function(accumulator!)
                 }
                 
@@ -77,20 +72,10 @@ struct CalculatorBrain {
                 
                 if accumulator != nil {
                     if pendingBinaryOperation != nil {
-                        
-                        //                        description = description! + "\(symbol) \(accumulator!) "
                         performPendingBinaryOperation()
-                        
-                        
                     }
                     
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
-//
-//                    if description == nil {
-//                        description = "\(accumulator!) \(symbol) "
-//                    } else {
-//                        description = description! + "\(symbol) \(accumulator!) "
-//                    }
                     accumulator = nil //accumulator is moved into the pbo
                     description = description! + " \(symbol) "
                 }
@@ -138,13 +123,6 @@ struct CalculatorBrain {
     }
     
     var resultIsPending: Bool = false
-//        
-//        {
-//        get {
-//            return pendingBinaryOperation != nil
-//        }
-//    }
-//    
     
     var result: Double? {
         get {
