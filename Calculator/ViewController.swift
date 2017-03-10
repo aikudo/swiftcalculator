@@ -87,20 +87,15 @@ class ViewController: UIViewController {
         if brain.description == nil {
             status.text = " "
         } else {
-            if brain.resultIsPending {
-                status.text = brain.description! + ("...")
-            } else {
-                status.text = brain.description! + (" =")
-                
-            }
+//            if brain.resultIsPending {
+//                status.text = brain.description! + ("...")
+//            } else {
+//                status.text = brain.description! + (" =")
+//                
+//            }
+            status.text = brain.description! + ( brain.resultIsPending ? ("...") : (" ="))
             //            status.text = brain.resultIsPending ? brain.description! + ("...") : brain.description!
         }
-        
-        //        status.text = brain.description ?? " "
-        
-        //        if let description = brain.description {
-        //            status.text = description
-        //        }
         
         if let result = brain.result {
             displayValue = result
