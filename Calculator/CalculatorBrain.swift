@@ -45,56 +45,97 @@ struct CalculatorBrain {
     ]
     
     var description: String?
-   // failed f. g. and i.
+    
+    var accumulatorString: String?
+    
+    var dontPrepend: Bool? // quick hack to filter out extra leading accumulator
+    
+    // failed f. g. and i.
     mutating func performOperation(_ symbol: String) {
+        var performedString: String?
         if let operation = operations[symbol] {
             switch operation {
             case .constant(let value):
                 accumulator = value
-                description = description == nil ? symbol : description! + symbol
+                accumulatorString = symbol
+                
             case .unaryOperation(let function):
                 if accumulator != nil {
-                    if symbol == "x²" {
-                        description =  "(" + description! + ")²"
+                    
+                    if accumulatorString != nil{
+                        if symbol == "x²" {
+                            performedString = "(\(accumulatorString!))²"
+                        } else {
+                            performedString = symbol + "(\(accumulatorString!))"
+                        }
                     } else {
-                        description =  symbol + "(" + description! + ")"
+                        if symbol == "x²" {
+                            description = "(\(description!))²"
+                        } else {
+                            description = symbol + "(\(description!))"
+                        }
                     }
                     
                     accumulator = function(accumulator!)
+                    accumulatorString = nil
+                    dontPrepend = true
                 }
                 
             case .randomOperation:
                 accumulator = Double(arc4random()) / Double(UInt32.max)
-                description = description == nil ? "\(accumulator!)" : description! + "\(accumulator!)"
-
+                accumulatorString = "RND"
                 
-            case .binaryOperation(let function):
+            case .binaryOperation(let fn):
                 
-                if accumulator != nil {
+                if accumulator != nil { //multiple times operating on the operator will be skimmed
+                    if dontPrepend != nil {
+                        performedString = " \(symbol) "
+                        dontPrepend = nil
+                        
+                    } else {
+                        performedString = accumulatorString! + " \(symbol) "
+                        
+                    }
+                    
                     if pendingBinaryOperation != nil {
                         performPendingBinaryOperation()
                     }
                     
-                    pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
+                    pendingBinaryOperation = PendingBinaryOperation(function: fn, firstOperand: accumulator!)
+                    resultIsPending = true
                     accumulator = nil //accumulator is moved into the pbo
-                    description = description! + " \(symbol) "
+                    accumulatorString = nil
                 }
-                resultIsPending = true
                 
+                //this failed case i. because it doesn't autoclean up
             case .equals:
-                performPendingBinaryOperation()
-                resultIsPending = false
+                if accumulator != nil && pendingBinaryOperation != nil {
+                    performedString = accumulatorString ?? ""
+                    performPendingBinaryOperation()
+                    accumulatorString = nil
+                    dontPrepend = true
+                }
                 
             }
             
         }
         
+        if performedString != nil {
+            if description == nil {
+                description = performedString
+            } else {
+                description = description! + performedString!
+            }
+        }
+        
     }
-    
+    //    var accumulatorString: String
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator != nil {
             accumulator = pendingBinaryOperation?.perform(with: accumulator!)
+            accumulatorString = String(accumulator!)
             pendingBinaryOperation = nil
+            resultIsPending = false
         }
     }
     
@@ -114,14 +155,11 @@ struct CalculatorBrain {
     
     mutating func setOperand(_ operand: Double) {
         accumulator = operand
+        
         let number = NSNumber(value: operand)
         let formatNumber = NumberFormatter()
         if let operandFormatted = formatNumber.string(from: number) {
-            if description == nil {
-                description = operandFormatted
-            } else {
-                description = description! + operandFormatted
-            }
+            accumulatorString = operandFormatted
         }
         
         
