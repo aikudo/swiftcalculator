@@ -154,13 +154,18 @@ struct CalculatorBrain {
     }
     
     mutating func setOperand(_ operand: Double) {
-        accumulator = operand
         
         let number = NSNumber(value: operand)
         let formatNumber = NumberFormatter()
         if let operandFormatted = formatNumber.string(from: number) {
             accumulatorString = operandFormatted
         }
+        
+        if accumulator != nil {
+            //reset everything for a new operation?
+            description = accumulatorString
+        }
+        accumulator = operand
         
         
     }
