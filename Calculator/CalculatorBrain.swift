@@ -15,7 +15,6 @@ struct CalculatorBrain {
     private var accumulator: Double?
     
     private enum Operation {
-        //here we attach an associated value type which is Double
         case constant(Double, String)
         case randomOperation
         case unaryOperation((Double) -> Double, (String) -> String)
@@ -36,11 +35,11 @@ struct CalculatorBrain {
         "e" : Operation.constant(M_E, "e"),
         "RND" : Operation.randomOperation,
         "√" : Operation.unaryOperation(sqrt, { "√(\($0))" } ),
-        "sin" : Operation.unaryOperation(sin, { "sin(\($0)" } ),
-        "cos" : Operation.unaryOperation(cos, { "cos(\($0)" } ),
-        "tan" : Operation.unaryOperation(tan, { "tan(\($0)" } ),
-        "log" : Operation.unaryOperation(log, { "log(\($0)" } ),
-        "exp" : Operation.unaryOperation(exp, { "exp(\($0)" } ),
+        "sin" : Operation.unaryOperation(sin, { "sin(\($0))" } ),
+        "cos" : Operation.unaryOperation(cos, { "cos(\($0))" } ),
+        "tan" : Operation.unaryOperation(tan, { "tan(\($0))" } ),
+        "log" : Operation.unaryOperation(log, { "log(\($0))" } ),
+        "exp" : Operation.unaryOperation(exp, { "exp(\($0))" } ),
         "x²" : Operation.unaryOperation( {$0*$0}, { "(\($0))²" } ),
         "1/x" : Operation.unaryOperation( {1/$0},  { "1/(\($0))" } ),
         "±": Operation.unaryOperation( {-$0}, { "-(\($0))" } ),
@@ -52,15 +51,25 @@ struct CalculatorBrain {
         
     ]
     
-    //what the default/init values of non-optional variables?
-    var result: Double?
-    var description: String?
-    var resultIsPending = false
+    var result: Double? {
+        get{
+            return evaluate().result
+        }
+    }
     
-    private var accumulatorString: String?
+    var description: String? {
+        get {
+            return evaluate().description
+        }
+    }
     
+    var resultIsPending: Bool {
+        get {
+            return evaluate().isPending
+        }
+    }
     
-    
+
     private struct PendingBinaryOperation {
         let function: (Double, Double) -> Double
         let functionDescription: (String, String) -> String
@@ -80,11 +89,6 @@ struct CalculatorBrain {
     mutating func performOperation(_ symbol: String) {
         let instruction  = Instruction.operation(symbol)
         instructionList.append(instruction)
-        let (as1, as2, as3) = evaluate()
-        // can't assign mismatched optional types in tuple directly
-        result = as1
-        resultIsPending = as2
-        description = as3
     }
     
     
@@ -96,6 +100,12 @@ struct CalculatorBrain {
     mutating func setOperand(_ operand: Double) {
         let instruction = Instruction.operand(operand)
         instructionList.append(instruction)
+    }
+    
+    mutating func undo() {
+        if instructionList.count > 0 {
+            instructionList.removeLast()
+        }
     }
     
     func evaluate(using variable: Dictionary<String, Double>? = nil) -> (result: Double?, isPending: Bool, description: String) {
@@ -189,7 +199,10 @@ struct CalculatorBrain {
                 
             }
         }
-        NSLog("performed: \(description)")
+        NSLog("performed: \(description), ans: \(accumulator)")
+        
+        description = description ?? accumulatorString
+
         return (accumulator, isPending, description!)
     }
     

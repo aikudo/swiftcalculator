@@ -16,6 +16,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var status: UILabel!
     
     private var userIsInTheMiddleOfTyping = false
+    private var myDict = [String: Double] ()
     
     private var brain = CalculatorBrain()
     
@@ -35,32 +36,29 @@ class ViewController: UIViewController {
     
     @IBAction func clearCalculator(_ sender: UIButton) {
         brain = CalculatorBrain ()
+        myDict = [String: Double] ()
         userIsInTheMiddleOfTyping = false
         display.text = " "
         status.text = " "
     }
     
     @IBAction func backSpace(_ sender: UIButton) {
-        //if display.text?.characters.count != 0,
-        if let lastIndex = display.text?.index(before: (display.text?.endIndex)!) {
-            NSLog("last is \(lastIndex)")
-            display.text?.remove(at: lastIndex)
-            if display.text?.characters.count == 0 {
-                display.text = " "
+        if(userIsInTheMiddleOfTyping) {
+            if let lastIndex = display.text?.index(before: (display.text?.endIndex)!) {
+                NSLog("last is \(lastIndex)")
+                display.text?.remove(at: lastIndex)
+                if display.text?.characters.count == 0 {
+                    display.text = " "
+                }
             }
+        } else {
+            brain.undo() //need to update the screen?
         }
-        //}
     }
     
     @IBOutlet weak var labelMemory: UILabel!
     
-    //from ->M
-    @IBAction func setMemoryM(_ sender: UIButton) {
-    //label
-        labelMemory.text = String(displayValue)
-//        brain.evaluate()
-        
-    }
+    
     
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
@@ -82,31 +80,34 @@ class ViewController: UIViewController {
         
     }
     
+    //from ->M
+    @IBAction func setMemoryM(_ sender: UIButton) {
+        labelMemory.text = String(displayValue)
+        myDict["M"] = displayValue
+        let (result, isPending, description) = brain.evaluate(using: myDict)
+        
+        status.text = description + (isPending  ? ("...") : (" ="))
+        
+        if let result = result {
+            displayValue = result
+        }
+        
+        
+    }
     
     //from M
     @IBAction func getMemoryM(_ sender: UIButton) {
-        brain.setOperand(variable: "M")
         
         if let mathematicalSymbol = sender.currentTitle {
-            brain.performOperation(mathematicalSymbol)
-            //calling this again caused the dublication in M
+            brain.setOperand(variable: mathematicalSymbol)
+            let result = brain.evaluate().result
+            displayValue = result ?? displayValue
+            // note that we don't update the description because of 7.c
             
         }
-        
-//        if brain.description == nil {
-//            status.text = " "
-//        } else {
-//
-//            status.text = brain.description! + ( brain.resultIsPending ? ("...") : (" ="))
-//        }
-//        
-//        if let result = brain.result {
-//            displayValue = result
-//        }
-//        
     }
     
-
+    
     @IBAction func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
             brain.setOperand(displayValue)
@@ -119,7 +120,7 @@ class ViewController: UIViewController {
             
         }
         
-
+        
         if brain.description == nil {
             status.text = " "
         } else {
