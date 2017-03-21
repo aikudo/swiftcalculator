@@ -52,6 +52,16 @@ class ViewController: UIViewController {
         //}
     }
     
+    @IBOutlet weak var labelMemory: UILabel!
+    
+    //from ->M
+    @IBAction func setMemoryM(_ sender: UIButton) {
+    //label
+        labelMemory.text = String(displayValue)
+//        brain.evaluate()
+        
+    }
+    
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
         
@@ -72,6 +82,31 @@ class ViewController: UIViewController {
         
     }
     
+    
+    //from M
+    @IBAction func getMemoryM(_ sender: UIButton) {
+        brain.setOperand(variable: "M")
+        
+        if let mathematicalSymbol = sender.currentTitle {
+            brain.performOperation(mathematicalSymbol)
+            //calling this again caused the dublication in M
+            
+        }
+        
+//        if brain.description == nil {
+//            status.text = " "
+//        } else {
+//
+//            status.text = brain.description! + ( brain.resultIsPending ? ("...") : (" ="))
+//        }
+//        
+//        if let result = brain.result {
+//            displayValue = result
+//        }
+//        
+    }
+    
+
     @IBAction func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
             brain.setOperand(displayValue)
@@ -84,17 +119,17 @@ class ViewController: UIViewController {
             
         }
         
+
         if brain.description == nil {
             status.text = " "
         } else {
-//            if brain.resultIsPending {
-//                status.text = brain.description! + ("...")
-//            } else {
-//                status.text = brain.description! + (" =")
-//                
-//            }
-            status.text = brain.description! + ( brain.resultIsPending ? ("...") : (" ="))
-            //            status.text = brain.resultIsPending ? brain.description! + ("...") : brain.description!
+            
+            if brain.resultIsPending {
+                status.text = brain.description! + ("...")
+            } else {
+                status.text = brain.description! + (" =")
+                
+            }
         }
         
         if let result = brain.result {
