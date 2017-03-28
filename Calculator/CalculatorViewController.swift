@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  CalculatorViewController.swift
 //  Calculator
 //
 //  Created by linh on 2/22/17.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CalculatorViewController: UIViewController {
     
     
     @IBOutlet weak var display: UILabel!
@@ -23,7 +23,7 @@ class ViewController: UIViewController {
     private var displayValue: Double{
         get {
             //this remove white space that was appended when the input label is empty
-            return Double(display.text!.trimmingCharacters(in: .whitespaces))!
+            return Double(display.text!.trimmingCharacters(in: .whitespaces)) ?? 0.0
         }
         set {
             let formattedValue = NumberFormatter ()
@@ -137,5 +137,25 @@ class ViewController: UIViewController {
             displayValue = result
         }
     }
+    
+    
+
+    
+    private func compute(_ inputX: Double ) -> Double? {
+        myDict["M"] = inputX
+        return brain.evaluate(using: myDict).result
+    }
+    
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Get the new view controller using segue.destinationViewController.
+        // Pass the selected object to the new view controller.
+        if let dvc = segue.destination as? GraphViewController {
+            dvc.title = brain.description
+            dvc.function = compute
+            
+        }
+    }
+    
 }
 

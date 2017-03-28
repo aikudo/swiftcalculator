@@ -12,6 +12,10 @@ import Foundation
 struct CalculatorBrain {
     
     
+    var result: Double? { return evaluate().result }
+    var description: String? { return evaluate().description }
+    var resultIsPending: Bool { return evaluate().isPending }
+    
     private var accumulator: Double?
     
     private enum Operation {
@@ -48,28 +52,8 @@ struct CalculatorBrain {
         "×": Operation.binaryOperation( {$0 * $1}, { "\($0) × \($1)"} ),
         "÷": Operation.binaryOperation( {$0 / $1}, { "\($0) ÷ \($1)"} ),
         "=": Operation.equals
-        
     ]
     
-    var result: Double? {
-        get{
-            return evaluate().result
-        }
-    }
-    
-    var description: String? {
-        get {
-            return evaluate().description
-        }
-    }
-    
-    var resultIsPending: Bool {
-        get {
-            return evaluate().isPending
-        }
-    }
-    
-
     private struct PendingBinaryOperation {
         let function: (Double, Double) -> Double
         let functionDescription: (String, String) -> String
@@ -87,19 +71,16 @@ struct CalculatorBrain {
     
     
     mutating func performOperation(_ symbol: String) {
-        let instruction  = Instruction.operation(symbol)
-        instructionList.append(instruction)
+        instructionList.append(Instruction.operation(symbol))
     }
     
     
     mutating func setOperand(variable named: String) {
-        let instruction  = Instruction.operandMemonic(named)
-        instructionList.append(instruction)
+        instructionList.append(Instruction.operandMemonic(named))
     }
     
     mutating func setOperand(_ operand: Double) {
-        let instruction = Instruction.operand(operand)
-        instructionList.append(instruction)
+        instructionList.append(Instruction.operand(operand))
     }
     
     mutating func undo() {
@@ -128,28 +109,27 @@ struct CalculatorBrain {
         }
         
         func performOperation(_ symbol: String) {
-
+            
             if let operation = operations[symbol] {
                 switch operation {
                 case .constant(let value, let valueSymbol):
                     accumulator = value
                     accumulatorString = valueSymbol
                     
+                case .randomOperation:
+                    accumulator = Double(arc4random()) / Double(UInt32.max)
+                    accumulatorString = "RND"
+                    
                 case .unaryOperation(let function, let descriptionFunction):
                     if accumulator != nil {
                         accumulator = function(accumulator!)
                         accumulatorString = descriptionFunction(accumulatorString!)
                         description = accumulatorString
-
+                        
                     }
                     
-                case .randomOperation:
-                    accumulator = Double(arc4random()) / Double(UInt32.max)
-                    accumulatorString = "RND"
-                    
                 case .binaryOperation(let fn, let descriptionFunction):
-                    
-                    if accumulator != nil { //multiple times operating on the operator will be skimmed
+                    if accumulator != nil {
                         if pendingBinaryOperation != nil {
                             performPendingBinaryOperation()
                             isPending = false
@@ -162,7 +142,6 @@ struct CalculatorBrain {
                         )
                         description = accumulatorString! + " \(symbol) "
                         isPending = true
-                        
                     }
                     
                 case .equals:
@@ -177,9 +156,10 @@ struct CalculatorBrain {
                         
                     }
                     
-                }
+                } //switch-block
                 
-            }
+                
+            } //if-block
         }
         
         
@@ -189,7 +169,6 @@ struct CalculatorBrain {
                 performOperation(operationSymbol)
                 
             case .operandMemonic(let operandSymbol):
-                
                 accumulator = variable?[operandSymbol] ?? 0.0
                 accumulatorString = operandSymbol
                 
@@ -201,8 +180,8 @@ struct CalculatorBrain {
         }
         NSLog("performed: \(description), ans: \(accumulator)")
         
-        description = description ?? accumulatorString
-
+        description = description ?? accumulatorString ?? "0.0"
+        
         return (accumulator, isPending, description!)
     }
     
